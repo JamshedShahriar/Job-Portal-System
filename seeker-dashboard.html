@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Seeker Dashboard</title>
+    <script>
+        const loggedUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (!loggedUser || loggedUser.role !== 'seeker') {
+            alert("এক্সেস নিষিদ্ধ! শুধুমাত্র লগইন করা Job Seeker-রা ঢুকতে পারবে।");
+            window.location.href = "login.html";
+        }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', 'Segoe UI', sans-serif; }
+        body { background:#f8fafc; color:#0f172a; }
+        .header { background:#ffffff; padding:18px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; }
+        .layout { max-width:1280px; margin:32px auto; padding:0 24px; display:grid; grid-template-columns:440px 1fr; gap:28px; }
+        .card { background:#ffffff; padding:24px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.02); margin-bottom:20px; }
+        .btn-main { background:#4f46e5; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+        .btn-main:hover { background:#4338ca; }
+        .job-card { border:1px solid #e2e8f0; padding:20px; border-radius:12px; margin-top:14px; background:#fff; transition:all 0.2s; }
+        .job-card:hover { border-color:#cbd5e1; box-shadow:0 8px 16px rgba(0,0,0,0.04); }
+        .form-group { margin-bottom:12px; }
+        .form-group label { display:block; font-size:11px; font-weight:700; margin-bottom:4px; color:#475569; text-transform:uppercase; letter-spacing:0.5px; }
+        .form-group input, .form-group textarea, .form-group select { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; }
+        .form-row { display:flex; gap:10px; }
+        .section-title { font-size:13px; font-weight:800; color:#4f46e5; margin:16px 0 10px 0; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid #e0e7ff; padding-bottom:4px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 style="color:#4f46e5; font-size:20px; font-weight:800;">Job Seeker Portal</h1>
+        <div>
+            <span style="font-size:14px; font-weight:600; margin-right:16px;" id="uName">Candidate</span>
+            <button onclick="logout()" class="btn-main" style="background:#ef4444; padding:8px 16px;">Logout</button>
+        </div>
+    </div>
+
+    <div class="layout">
+        <div>
+            <div class="card">
+                <h3 style="font-size:18px; font-weight:700; margin-bottom:4px;">Generic CV Builder</h3>
+                <p style="font-size:12px; color:#64748b; margin-bottom:16px;">Complete your resume for one-click application</p>
+
+                <form id="cvForm" onsubmit="saveGenericCv(event)">
+                    <div class="section-title">1. Personal Info</div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="cvFullName" placeholder="e.g. Jamshed Shahriar" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Phone</label>
+                            <input type="text" id="cvPhone" placeholder="+8801700000000" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Address</label>
+                            <input type="text" id="cvAddress" placeholder="Chattogram" required>
+                        </div>
+                    </div>
+
+                    <div class="section-title">2. Education</div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Degree</label>
+                            <input type="text" id="cvDegree" placeholder="B.Sc in CSE" required>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Institute</label>
+                            <input type="text" id="cvInstitute" placeholder="PCIU" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label>Passing Year</label>
+                            <input type="text" id="cvPassYear" placeholder="2026">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>CGPA</label>
+                            <input type="text" id="cvCgpa" placeholder="3.80">
+                        </div>
+                    </div>
+
+                    <div class="section-title">3. Skills & Experience</div>
+                    <div class="form-group">
+                        <label>Technical Skills</label>
+                        <input type="text" id="cvSkills" placeholder="Python, Machine Learning, PHP" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Experience Summary</label>
+                        <textarea id="cvExp" rows="2" placeholder="Describe your experience..." required></textarea>
+                    </div>
+
+                    <div class="section-title">4. Portfolio</div>
+                    <div class="form-group">
+                        <label>Projects</label>
+                        <textarea id="cvProjects" rows="2" placeholder="Key projects..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>GitHub / Portfolio Link</label>
+                        <input type="url" id="cvPortfolio" placeholder="https://github.com/username">
+                    </div>
+
+                    <button type="submit" class="btn-main" style="width:100%; margin-top:8px;">Save Generic CV</button>
+                </form>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h3 style="font-size:18px; font-weight:700;">Filter Jobs</h3>
+                <div style="margin-top:12px;">
+                    <select id="catDropdown" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:10px; font-size:14px;">
+                        <option value="all">All Categories</option>
+                        <option value="IT & Software">💻 IT & Software</option>
+                        <option value="Data Science & AI">🤖 Data Science & AI</option>
+                        <option value="Graphics & UI/UX">🎨 Graphics & UI/UX</option>
+                        <option value="Digital Marketing">📢 Digital Marketing</option>
+                        <option value="Content Writing">✍️ Content Writing</option>
+                        <option value="Finance & Accounting">💰 Finance & Accounting</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size:18px; font-weight:700;">Available Job Openings</h3>
+                <div id="jobContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uName').innerText = loggedUser.name;
+
+        const savedCv = JSON.parse(localStorage.getItem('seekerCv_' + loggedUser.email));
+        if (savedCv) {
+            document.getElementById('cvFullName').value = savedCv.fullName || '';
+            document.getElementById('cvPhone').value = savedCv.phone || '';
+            document.getElementById('cvAddress').value = savedCv.address || '';
+            document.getElementById('cvDegree').value = savedCv.degree || '';
+            document.getElementById('cvInstitute').value = savedCv.institute || '';
+            document.getElementById('cvPassYear').value = savedCv.passYear || '';
+            document.getElementById('cvCgpa').value = savedCv.cgpa || '';
+            document.getElementById('cvSkills').value = savedCv.skills || '';
+            document.getElementById('cvExp').value = savedCv.experience || '';
+            document.getElementById('cvProjects').value = savedCv.projects || '';
+            document.getElementById('cvPortfolio').value = savedCv.portfolio || '';
+        }
+
+        function saveGenericCv(e) {
+            e.preventDefault();
+            const portfolioInput = document.getElementById('cvPortfolio').value.trim();
+            
+            const cvData = {
+                fullName: document.getElementById('cvFullName').value,
+                phone: document.getElementById('cvPhone').value,
+                address: document.getElementById('cvAddress').value,
+                degree: document.getElementById('cvDegree').value,
+                institute: document.getElementById('cvInstitute').value,
+                passYear: document.getElementById('cvPassYear').value,
+                cgpa: document.getElementById('cvCgpa').value,
+                skills: document.getElementById('cvSkills').value,
+                experience: document.getElementById('cvExp').value,
+                projects: document.getElementById('cvProjects').value,
+                portfolio: portfolioInput
+            };
+            localStorage.setItem('seekerCv_' + loggedUser.email, JSON.stringify(cvData));
+            alert('Generic CV Profile updated successfully!');
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        }
+
+        const defaultJobs = [
+            { title: "Senior Full Stack Developer", companyName: "Brain Station 23", category: "IT & Software", salary: "$1200 / mo", desc: "React & Node.js application management." },
+            { title: "AI Research Assistant", companyName: "DataSoft Systems", category: "Data Science & AI", salary: "$1500 / mo", desc: "Python, Computer Vision & Model building." },
+            { title: "UI/UX Product Designer", companyName: "TigerIT Bangladesh", category: "Graphics & UI/UX", salary: "$900 / mo", desc: "Wireframing and Figma system designs." }
+        ];
+
+        let postedJobs = JSON.parse(localStorage.getItem('postedJobs')) || [];
+        let allJobs = [...defaultJobs, ...postedJobs];
+
+        const container = document.getElementById('jobContainer');
+        
+        function renderJobs(jobList) {
+            container.innerHTML = '';
+            if (jobList.length === 0) {
+                container.innerHTML = '<p style="color:#64748b; padding:10px;">কোনো জব পাওয়া যায়নি।</p>';
+                return;
+            }
+            jobList.forEach(job => {
+                container.innerHTML += `
+                    <div class="job-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <strong style="color:#1e293b; font-size:16px;">${job.title}</strong>
+                            <span style="font-size:12px; font-weight:700; background:#e0e7ff; color:#3730a3; padding:4px 10px; border-radius:20px;">${job.salary}</span>
+                        </div>
+                        <p style="font-size:13px; font-weight:600; color:#059669; margin:4px 0 8px 0;">🏢 ${job.companyName || 'Confidential Company'}</p>
+                        <p style="font-size:12px; color:#64748b;">Category: ${job.category}</p>
+                        <p style="font-size:13px; margin:8px 0; color:#334155;">${job.desc}</p>
+                        <button onclick="applyJob('${job.title}', '${job.companyName || 'Confidential Company'}')" class="btn-main" style="padding:8px 16px; font-size:13px; margin-top:8px;">Apply Job</button>
+                    </div>
+                `;
+            });
+        }
+
+        renderJobs(allJobs);
+
+        document.getElementById('catDropdown').addEventListener('change', function() {
+            const selectedCat = this.value;
+            const filtered = selectedCat === 'all' ? allJobs : allJobs.filter(j => j.category === selectedCat);
+            renderJobs(filtered);
+        });
+
+        function applyJob(jobTitle, companyName) {
+            const currentCv = JSON.parse(localStorage.getItem('seekerCv_' + loggedUser.email));
+            if (!currentCv) {
+                alert('দয়া করে আবেদন করার আগে বামপাশের Generic CV ফর্মটি ফিল-আপ করুন!');
+                return;
+            }
+            
+            let applications = JSON.parse(localStorage.getItem('jobApplications')) || [];
+            applications.push({
+                jobTitle: jobTitle,
+                companyName: companyName,
+                applicantEmail: loggedUser.email,
+                cvDetails: currentCv,
+                appliedAt: new Date().toLocaleDateString()
+            });
+            
+            localStorage.setItem('jobApplications', JSON.stringify(applications));
+            alert(`Successfully Applied for "${jobTitle}" at ${companyName}!`);
+        }
+    </script>
+</body>
+</html>

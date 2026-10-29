@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employer Dashboard</title>
+    <script>
+        const loggedUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (!loggedUser || loggedUser.role !== 'employer') {
+            alert("এক্সেস নিষিদ্ধ! শুধুমাত্র Employer-রা এখানে আসতে পারবে।");
+            window.location.href = "login.html";
+        }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', 'Segoe UI', sans-serif; }
+        body { background:#f8fafc; color:#0f172a; }
+        .header { background:#ffffff; padding:18px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; }
+        .container { max-width:1280px; margin:32px auto; padding:0 24px; display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+        .card { background:#ffffff; padding:24px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.02); margin-bottom:20px; }
+        .form-ctrl { margin-bottom:14px; }
+        .form-ctrl label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; color:#475569; text-transform:uppercase; letter-spacing:0.5px; }
+        .form-ctrl input, .form-ctrl select, .form-ctrl textarea { width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; }
+        .btn-green { background:#059669; color:white; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer; width:100%; font-size:14px; transition:all 0.2s; }
+        .btn-green:hover { background:#047857; }
+        .job-item { border:1px solid #e2e8f0; padding:16px; border-radius:12px; margin-top:10px; background:#f8fafc; display:flex; justify-content:space-between; align-items:center; }
+        .app-item { border:1px solid #e2e8f0; padding:16px; border-radius:12px; margin-top:12px; background:#ffffff; font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,0.02); }
+        .app-item h4 { color:#0f172a; font-size:15px; margin-bottom:2px; font-weight:700; }
+        .badge { background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 style="color:#059669; font-size:20px; font-weight:800;">Employer Portal</h1>
+        <div>
+            <span style="font-size:14px; font-weight:600; margin-right:16px;" id="empName">Employer</span>
+            <button onclick="logout()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Post & Manage Jobs -->
+        <div>
+            <div class="card">
+                <h3 style="font-size:18px; font-weight:700; margin-bottom:12px;">Post New Job Announcement</h3>
+                <div class="form-ctrl">
+                    <label>Job Title</label>
+                    <input type="text" id="jTitle" placeholder="e.g. Senior Frontend Developer">
+                </div>
+                <div class="form-ctrl">
+                    <label>Company Name</label>
+                    <input type="text" id="jCompany" placeholder="e.g. TechSolutions Ltd.">
+                </div>
+                <div class="form-ctrl">
+                    <label>Category</label>
+                    <select id="jCategory">
+                        <option value="IT & Software">💻 IT & Software</option>
+                        <option value="Data Science & AI">🤖 Data Science & AI</option>
+                        <option value="Graphics & UI/UX">🎨 Graphics & UI/UX</option>
+                        <option value="Digital Marketing">📢 Digital Marketing</option>
+                        <option value="Finance & Accounting">💰 Finance & Accounting</option>
+                    </select>
+                </div>
+                <div class="form-ctrl">
+                    <label>Salary Range</label>
+                    <input type="text" id="jSalary" placeholder="$800 - $1000 / mo">
+                </div>
+                <div class="form-ctrl">
+                    <label>Description</label>
+                    <textarea id="jDesc" rows="3" placeholder="Job description and requirements..."></textarea>
+                </div>
+                <button onclick="postJob()" class="btn-green">Publish Job Post</button>
+            </div>
+
+            <div class="card">
+                <h3 style="font-size:18px; font-weight:700;">Manage My Posted Jobs</h3>
+                <div id="postedJobsList"></div>
+            </div>
+        </div>
+
+        <!-- Applications Review -->
+        <div>
+            <div class="card">
+                <h3 style="font-size:18px; font-weight:700;">Received Candidate Applications</h3>
+                <p style="font-size:12px; color:#64748b; margin-bottom:12px;">Candidates who applied with their Generic CV</p>
+                <div id="applicationsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('empName').innerText = loggedUser.name;
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        }
+
+        function renderEmployerJobs() {
+            const listContainer = document.getElementById('postedJobsList');
+            let postedJobs = JSON.parse(localStorage.getItem('postedJobs')) || [];
+            
+            if (postedJobs.length === 0) {
+                listContainer.innerHTML = '<p style="font-size:13px; color:#64748b; margin-top:10px;">এখনো কোনো জব পোস্ট করা হয়নি।</p>';
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            postedJobs.forEach((job, index) => {
+                listContainer.innerHTML += `
+                    <div class="job-item">
+                        <div>
+                            <strong style="color:#0f172a;">${job.title}</strong>
+                            <p style="font-size:12px; color:#059669; font-weight:600;">🏢 ${job.companyName || 'N/A'}</p>
+                            <p style="font-size:11px; color:#64748b;">${job.category} | ${job.salary}</p>
+                        </div>
+                        <button onclick="deleteJob(${index})" style="background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        function postJob() {
+            const title = document.getElementById('jTitle').value.trim();
+            const companyName = document.getElementById('jCompany').value.trim();
+            const category = document.getElementById('jCategory').value;
+            const salary = document.getElementById('jSalary').value.trim();
+            const desc = document.getElementById('jDesc').value.trim();
+
+            if(!title || !companyName || !salary || !desc) {
+                alert("সব বিবরণ ও কোম্পানির নাম প্রদান করুন!");
+                return;
+            }
+
+            let postedJobs = JSON.parse(localStorage.getItem('postedJobs')) || [];
+            postedJobs.push({ id: Date.now(), title, companyName, category, salary, desc, employerEmail: loggedUser.email });
+            
+            localStorage.setItem('postedJobs', JSON.stringify(postedJobs));
+            alert("জব সফলভাবে পোস্ট করা হয়েছে!");
+            
+            document.getElementById('jTitle').value = '';
+            document.getElementById('jCompany').value = '';
+            document.getElementById('jSalary').value = '';
+            document.getElementById('jDesc').value = '';
+
+            renderEmployerJobs();
+        }
+
+        function deleteJob(index) {
+            let postedJobs = JSON.parse(localStorage.getItem('postedJobs')) || [];
+            postedJobs.splice(index, 1);
+            localStorage.setItem('postedJobs', JSON.stringify(postedJobs));
+            renderEmployerJobs();
+        }
+
+        function renderApplications() {
+            const appContainer = document.getElementById('applicationsList');
+            let applications = JSON.parse(localStorage.getItem('jobApplications')) || [];
+
+            if (applications.length === 0) {
+                appContainer.innerHTML = '<p style="font-size:13px; color:#64748b;">এখনো কোনো আবেদন জমা পড়েনি।</p>';
+                return;
+            }
+
+            appContainer.innerHTML = '';
+            applications.forEach(app => {
+                const cv = app.cvDetails || {};
+                
+                // Safe Portfolio URL Formatting
+                let portfolioUrl = cv.portfolio ? cv.portfolio.trim() : '';
+                if (portfolioUrl && !portfolioUrl.startsWith('http://') && !portfolioUrl.startsWith('https://')) {
+                    portfolioUrl = 'https://' + portfolioUrl;
+                }
+
+                appContainer.innerHTML += `
+                    <div class="app-item">
+                        <h4>${app.jobTitle}</h4>
+                        <p style="font-size:12px; color:#059669; font-weight:600; margin-bottom:8px;">🏢 ${app.companyName || 'Company'}</p>
+                        <p><strong>Applicant:</strong> ${cv.fullName || app.applicantEmail}</p>
+                        <p><strong>Phone:</strong> ${cv.phone || 'N/A'} | <strong>Address:</strong> ${cv.address || 'N/A'}</p>
+                        <p><strong>Education:</strong> ${cv.degree || 'N/A'} (${cv.institute || ''})</p>
+                        <p style="margin-top:4px;"><strong>Skills:</strong> <span class="badge">${cv.skills || 'N/A'}</span></p>
+                        ${portfolioUrl ? `<p style="margin-top:6px;"><a href="${portfolioUrl}" target="_blank" style="color:#4f46e5; font-weight:700;">View Portfolio →</a></p>` : `<p style="margin-top:6px; color:#94a3b8; font-size:12px;">No Portfolio Provided</p>`}
+                    </div>
+                `;
+            });
+        }
+
+        renderEmployerJobs();
+        renderApplications();
+    </script>
+</body>
+</html>
