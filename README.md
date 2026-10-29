@@ -29,4 +29,4 @@ A modern, responsive, and fully functional Job Portal web application built with
 2. Open `index.html` in any modern web browser.
 3. Register accounts as an Employer to post jobs and as a Seeker to apply! 
 ## 🌐 Live Demo
-Click here to view the live website: [Live Demo Link](https://jamshedshahriar.github.io/Job_Portal_System/)
+Click here to view the live website: [Live Demo Link](https://jamshedshahriar.github.io/Job-Portal-System/)
